@@ -1,9 +1,9 @@
+import 'package:staff_app/models/staff.dart';
+import 'package:staff_app/services/api_service.dart';
 import 'package:flutter/material.dart';
-import '../models/staff.dart';
-import '../services/api_service.dart';
 
 class AddStaffScreen extends StatefulWidget {
-  final StaffMember? staff; // Null means add mode
+  final StaffMember? staff;
 
   const AddStaffScreen({super.key, this.staff});
 
@@ -34,7 +34,7 @@ class _AddStaffScreenState extends State<AddStaffScreen> {
       text: staff?.salary.toStringAsFixed(2) ?? '',
     );
     _department = staff?.department ?? 'Administration';
-    _status = staff?.status ?? 'active';
+    _status = staff?.status ?? 'actif';
   }
 
   @override
@@ -54,7 +54,7 @@ class _AddStaffScreenState extends State<AddStaffScreen> {
 
     try {
       final staff = StaffMember(
-        id: widget.staff?.id ?? '', // Keep existing ID for edits
+        id: widget.staff?.id ?? '',
         name: _nameController.text,
         email: _emailController.text,
         phone: _phoneController.text,
@@ -76,10 +76,14 @@ class _AddStaffScreenState extends State<AddStaffScreen> {
           SnackBar(
             content: Text(
               widget.staff == null
-                  ? 'Staff added successfully!'
-                  : 'Staff updated successfully!',
+                  ? 'Membre du personnel ajouté avec succès !'
+                  : 'Membre du personnel mis à jour avec succès !',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
         Navigator.pop(context, true);
@@ -88,8 +92,12 @@ class _AddStaffScreenState extends State<AddStaffScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Text('Erreur : ${e.toString()}'),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -101,103 +109,333 @@ class _AddStaffScreenState extends State<AddStaffScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(widget.staff == null ? "Add Staff" : "Edit Staff"),
+        title: Text(
+          widget.staff == null ? "Ajouter un membre" : "Modifier le membre",
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              // Name Field
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: "Name"),
-                validator: (value) => value!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Email Field
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: "Email"),
-                validator: (value) => value!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Phone Field
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: "Phone"),
-              ),
-              const SizedBox(height: 16),
-
-              // Position Field
-              TextFormField(
-                controller: _positionController,
-                decoration: const InputDecoration(labelText: "Position"),
-                validator: (value) => value!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Department Dropdown
-              DropdownButtonFormField<String>(
-                value: _department,
-                items:
-                    const [
-                          'Administration',
-                          'Finance',
-                          'Académique',
-                          'Ressources Humaines',
-                          'Maintenance',
-                        ]
-                        .map(
-                          (dept) =>
-                              DropdownMenuItem(value: dept, child: Text(dept)),
-                        )
-                        .toList(),
-                onChanged: (value) => setState(() => _department = value!),
-                decoration: const InputDecoration(labelText: "Department"),
-              ),
-              const SizedBox(height: 16),
-
-              // Salary Field
-              TextFormField(
-                controller: _salaryController,
-                decoration: const InputDecoration(labelText: "Salary"),
-                keyboardType: TextInputType.number,
-                validator: (value) => value!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Status Dropdown
-              DropdownButtonFormField<String>(
-                value: _status,
-                items: const [
-                  DropdownMenuItem(value: 'active', child: Text('Active')),
-                  DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                  DropdownMenuItem(value: 'on_leave', child: Text('On Leave')),
-                ],
-                onChanged: (value) => setState(() => _status = value!),
-                decoration: const InputDecoration(labelText: "Status"),
-              ),
-              const SizedBox(height: 24),
-
-              // Save Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2ECC71),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            // Section Avatar
+            Center(
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  ),
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
+                child: Center(
+                  child: Text(
+                    _nameController.text.isNotEmpty
+                        ? _nameController.text
+                            .split(' ')
+                            .where((n) => n.isNotEmpty)
+                            .map((n) => n[0].toUpperCase())
+                            .take(2)
+                            .join()
+                        : "?",
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Champ Nom
+            _buildEnhancedTextField(
+              controller: _nameController,
+              label: "Nom complet",
+              icon: Icons.person_rounded,
+              validator: (value) => value!.isEmpty ? "Le nom est requis" : null,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Champ Email
+            _buildEnhancedTextField(
+              controller: _emailController,
+              label: "Adresse email",
+              icon: Icons.email_rounded,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value!.isEmpty) return "L'email est requis";
+                if (!RegExp(
+                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                ).hasMatch(value)) {
+                  return "Veuillez entrer un email valide";
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            // Champ Téléphone
+            _buildEnhancedTextField(
+              controller: _phoneController,
+              label: "Numéro de téléphone",
+              icon: Icons.phone_rounded,
+              keyboardType: TextInputType.phone,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Champ Poste
+            _buildEnhancedTextField(
+              controller: _positionController,
+              label: "Poste occupé",
+              icon: Icons.work_rounded,
+              validator:
+                  (value) => value!.isEmpty ? "Le poste est requis" : null,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Menu Département
+            _buildEnhancedDropdown(
+              value: _department,
+              label: "Département",
+              icon: Icons.business_center_rounded,
+              items: const [
+                "Administration",
+                "Finance",
+                "Académique",
+                "Ressources Humaines",
+                "Maintenance",
+              ],
+              onChanged: (value) => setState(() => _department = value!),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Champ Salaire
+            _buildEnhancedTextField(
+              controller: _salaryController,
+              label: "Salaire annuel",
+              icon: Icons.attach_money_rounded,
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value!.isEmpty) return "Le salaire est requis";
+                if (double.tryParse(value) == null) {
+                  return "Veuillez entrer un nombre valide";
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            // Menu Statut
+            _buildEnhancedDropdown(
+              value: _status,
+              label: "Statut d'emploi",
+              icon: Icons.flag_rounded,
+              items: const ['actif', 'inactif', 'en_conge'],
+              itemLabels: const ['Actif', 'Inactif', 'En congé'],
+              onChanged: (value) => setState(() => _status = value!),
+            ),
+
+            const SizedBox(height: 40),
+
+            // Bouton de sauvegarde
+            Container(
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveStaff,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
                 child:
                     _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("SAVE STAFF"),
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              widget.staff == null
+                                  ? Icons.add_rounded
+                                  : Icons.save_rounded,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              widget.staff == null
+                                  ? "AJOUTER UN MEMBRE"
+                                  : "METTRE À JOUR",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
               ),
-            ],
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEnhancedTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF000000).withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        validator: validator,
+        keyboardType: keyboardType,
+        onChanged: (value) {
+          if (controller == _nameController) {
+            setState(() {}); // Rebuild pour mettre à jour l'avatar
+          }
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: const Color(0xFF6366F1), size: 20),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.all(20),
+          labelStyle: const TextStyle(color: Color(0xFF6B7280)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEnhancedDropdown({
+    required String value,
+    required String label,
+    required IconData icon,
+    required List<String> items,
+    List<String>? itemLabels,
+    required void Function(String?) onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF000000).withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        items:
+            items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              final displayLabel =
+                  itemLabels?[index] ??
+                  item
+                      .split('_')
+                      .map((word) => word[0].toUpperCase() + word.substring(1))
+                      .join(' ');
+
+              return DropdownMenuItem(value: item, child: Text(displayLabel));
+            }).toList(),
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: const Color(0xFF6366F1), size: 20),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.all(20),
+          labelStyle: const TextStyle(color: Color(0xFF6B7280)),
         ),
       ),
     );

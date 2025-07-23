@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import '../models/staff.dart';
 
 class ApiService {
@@ -20,8 +23,8 @@ class ApiService {
   //   return deviceUrl;
   // }
 
-  static const _baseUrl =
-      "http://192.168.0.112:5000/api/staff"; // Change to your host IP
+  static const _baseUrl = "http://192.168.194.126:5000/api/staff";
+
   static Future<List<StaffMember>> getStaff({
     String? search,
     String? filter,
@@ -89,5 +92,53 @@ class ApiService {
 
   static Future<void> deleteStaff(String id) async {
     await http.delete(Uri.parse("$_baseUrl/$id"));
+  }
+
+  static Future<void> deleteAllStaff() async {
+    final response = await http.delete(Uri.parse('$_baseUrl/delete-all'));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete all staff');
+    }
+  }
+
+  static Future<String> exportStaffToExcel() async {
+    try {
+      final dio = Dio();
+      final dir = await getTemporaryDirectory();
+      final path =
+          '${dir.path}/staff_export_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+
+      await dio.download(
+        '$_baseUrl/export/excel',
+        path,
+        options: Options(
+          responseType: ResponseType.bytes,
+          followRedirects: false,
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
+
+      return path;
+    } catch (e) {
+      throw Exception('Failed to export: ${e.toString()}');
+    }
+  }
+
+  static Future<int> importStaffFromExcel(File file) async {
+    try {
+      final dio = Dio();
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          filename: 'staff_import.xlsx',
+        ),
+      });
+
+      final response = await dio.post('$_baseUrl/import/excel', data: formData);
+
+      return response.data['importedCount'] as int;
+    } catch (e) {
+      throw Exception('Failed to import: ${e.toString()}');
+    }
   }
 }

@@ -1,42 +1,58 @@
 import 'package:flutter/material.dart';
 
-class StatsCard extends StatelessWidget {
+class EnhancedStatsCard extends StatelessWidget {
   final int value;
   final String label;
   final IconData icon;
-  final Color color;
+  final LinearGradient gradient;
 
-  const StatsCard({
+  const EnhancedStatsCard({
     super.key,
     required this.value,
     required this.label,
     required this.icon,
-    this.color = Colors.blue,
+    required this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 150,
-      margin: EdgeInsets.all(8),
-      padding: EdgeInsets.all(16),
+      width: 180,
+      height: 150,
+      margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2)),
-        ],
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: gradient.colors.first.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
-      child: Column(
-        children: [
-          Icon(icon, size: 40, color: color),
-          SizedBox(height: 10),
-          Text(
-            value.toString(),
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          Text(label, style: TextStyle(color: Colors.grey)),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 32, color: Colors.white.withValues(alpha: 0.9)),
+            const Spacer(),
+            Text(
+              value.toString(),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
